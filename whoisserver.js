@@ -5,13 +5,14 @@ host = 'localhost';
 port = 43;
 
 var server = net.createServer(function(conn) {
-  console.log('Connection established with: ' + conn.remoteAddress + ':' + conn.remotePort);
+  console.log('Connection established:\t' + conn.remoteAddress + ':' + conn.remotePort);
   
   conn.on('data', function(domain) {
     getRecordFromDomain(normalizeDomain(domain), function(record) {
       var resp = formatBufferForResonse(record);
       conn.write(resp);
       conn.end();
+      console.log('Connection closed:\t' + conn.remoteAddress + ':' + conn.remotePort);
     });
   });
 }).listen(port, host);
@@ -35,7 +36,11 @@ var getRecordFromDomain = function(domain, callback) {
         console.log('ERROR: ' + error);
         return;
       }
-        callback( rows[0]['record'] );
+        if( !rows[0] ) {
+          callback( getNoRecordResponseBuffer() );
+        } else {
+          callback( rows[0]['record'] );
+        }
     });
   });
 }
@@ -51,6 +56,13 @@ var formatBufferForResonse = function(buffer) {
 
 var normalizeDomain = function(domain) {
   return domain.toString().match(/\s*(\S+)\s*/)[1];
+};
+
+var getNoRecordResponseBuffer = function() {
+  var msg = 'No record available';
+  var buf = Buffer( msg.length );
+  buf.write(msg);
+  return buf;
 };
 
 console.log('Server started on ' + host + ':' + port);
