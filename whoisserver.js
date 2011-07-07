@@ -11,6 +11,7 @@ var server = net.createServer(function(conn) {
     getRecordFromDomain(normalizeDomain(domain), function(record) {
       var resp = formatBufferForResonse(record);
       conn.write(resp);
+      conn.end();
     });
   });
 }).listen(port, host);
